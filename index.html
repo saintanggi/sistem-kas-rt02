@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAS RT • Keuangan Warga Jadi Riang!</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'fredoka': ['Fredoka', 'sans-serif'],
+        'poppins': ['Poppins', 'sans-serif'],
+        'nunito': ['Nunito', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#FF8E53;border-radius:10px}
+::-webkit-scrollbar-track{background:#FFF1E0}
+*{scroll-behavior:smooth}
+.glass{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pattern-dots{background-image:radial-gradient(white 1.5px, transparent 1.5px);background-size:14px 14px}
+</style>
+</head>
+<body class="bg-[#FFFBF0] font-nunito text-[#2B2D42] overflow-x-hidden relative">
+<!-- Playful Background Blobs -->
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+  <div class="absolute -top-20 -left-20 w-[500px] h-[500px] bg-[#FFD93D] rounded-full blur-[80px] opacity-20"></div>
+  <div class="absolute top-[10%] right-[5%] w-[400px] h-[400px] bg-[#FF6B6B] rounded-full blur-[80px] opacity-15"></div>
+  <div class="absolute bottom-0 left-[30%] w-[600px] h-[600px] bg-[#06D6A0] rounded-full blur-[90px] opacity-10"></div>
+  <div class="absolute top-[40%] left-[45%] w-[300px] h-[300px] bg-[#7209B7] rounded-full blur-[70px] opacity-10"></div>
+</div>
+
+<!-- Header -->
+<header class="sticky top-0 z-40 bg-white/80 glass border-b border-orange-100">
+  <div class="max-w-[1400px] mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF6B6B] via-[#FF8E53] to-[#FFD23F] flex items-center justify-center text-white text-xl shadow-lg shadow-orange-200 rotate-3">
+        <i class="fa-solid fa-house-chimney"></i>
+      </div>
+      <div>
+        <h1 class="font-fredoka font-bold text-[22px] leading-none tracking-tight">KAS RT<span class="text-[#FF6B6B]">.</span></h1>
+        <p class="text-[11px] font-extrabold tracking-widest text-[#FF8E53] uppercase">TKR RT.02 / RW 07 • Mekarjaya</p>
+      </div>
+      <span class="hidden md:inline-flex ml-4 bg-[#06D6A0] text-white text-xs font-black px-3 py-1.5 rounded-full shadow-md">● ONLINE</span>
+    </div>
+
+    <div class="hidden lg:flex items-center gap-2 bg-white border-2 border-[#FFF0D6] rounded-full px-2 py-1.5 shadow-sm w-[360px]">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-sm"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <input id="globalSearch" placeholder="Cari warga, transaksi..." class="flex-1 outline-none text-sm font-bold placeholder:text-gray-400">
+      <span class="text-[10px] font-black bg-[#FFF0D6] px-2 py-1 rounded-full">/</span>
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button onclick="openModal('modalTransaksi')" class="hidden sm:inline-flex items-center gap-2 bg-[#2B2D42] text-white px-5 py-2.5 rounded-full font-black text-sm shadow-lg hover:scale-105 transition">
+        <i class="fa-solid fa-plus"></i> Catat
+      </button>
+      <button class="w-10 h-10 rounded-full bg-white border-2 border-[#FFF0D6] flex items-center justify-center text-[#FF8E53] shadow-sm relative">
+        <i class="fa-regular fa-bell"></i>
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-[#EF476F] rounded-full border-2 border-white animate-pulse"></span>
+      </button>
+      <div class="hidden sm:flex items-center gap-3 bg-white border-2 border-[#FFF0D6] rounded-full pl-1 pr-4 py-1 shadow-sm">
+        <img src="https://i.pravatar.cc/100?img=15" class="w-9 h-9 rounded-full object-cover border-2 border-[#FFD23F]">
+        <div class="leading-tight">
+          <p class="text-sm font-black">Pak Suryo</p>
+          <p class="text-[11px] font-bold text-gray-400">Ketua TKR RT.02</p>
+        </div>
+        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+      </div>
+      <div class="sm:hidden w-9 h-9 rounded-full overflow-hidden border-2 border-orange-200"><img src="https://i.pravatar.cc/100?img=15" class="w-full h-full object-cover"></div>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-[1400px] mx-auto px-4 lg:px-8 py-6 lg:py-8 flex flex-col lg:flex-row gap-6">
+  <!-- Sidebar Desktop -->
+  <aside class="hidden lg:block w-[260px] shrink-0">
+    <div class="bg-white rounded-[32px] p-4 shadow-[0_20px_40px_rgba(255,142,83,0.08)] border border-orange-50 sticky top-[92px]">
+      <nav class="space-y-1.5" id="desktopNav">
+        <button data-view="dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm bg-[#2B2D42] text-white shadow-lg">
+          <span class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center"><i class="fa-solid fa-table-columns"></i></span> Dashboard
+          <span class="ml-auto bg-[#FF6B6B] text-white text-[10px] px-2 py-1 rounded-full">3 BARU</span>
+        </button>
+        <button data-view="warga" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm text-[#2B2D42] hover:bg-orange-50 transition">
+          <span class="w-9 h-9 rounded-xl bg-[#FFF0D6] flex items-center justify-center text-[#FF8E53]"><i class="fa-solid fa-users"></i></span> Warga <span class="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-bold" id="navWargaCount">24</span>
+        </button>
+        <button data-view="transaksi" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm text-[#2B2D42] hover:bg-orange-50 transition">
+          <span class="w-9 h-9 rounded-xl bg-[#E0FFF6] flex items-center justify-center text-[#06D6A0]"><i class="fa-solid fa-arrow-right-arrow-left"></i></span> Transaksi
+        </button>
+        <button data-view="iuran" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm text-[#2B2D42] hover:bg-orange-50 transition">
+          <span class="w-9 h-9 rounded-xl bg-[#F3E8FF] flex items-center justify-center text-[#7209B7]"><i class="fa-solid fa-receipt"></i></span> Iuran Bulanan
+        </button>
+        <button data-view="laporan" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm text-[#2B2D42] hover:bg-orange-50 transition">
+          <span class="w-9 h-9 rounded-xl bg-[#E0F2FF] flex items-center justify-center text-[#3A86FF]"><i class="fa-solid fa-chart-simple"></i></span> Laporan
+        </button>
+      </nav>
+
+      <div class="mt-6 bg-gradient-to-br from-[#7209B7] via-[#4361EE] to-[#06BEBB] rounded-[24px] p-5 text-white relative overflow-hidden">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
+        <p class="text-xs font-black tracking-widest opacity-80">✨ TIPS KAS SEHAT</p>
+        <p class="font-fredoka font-bold text-[18px] leading-tight mt-2">Kas naik 12% bulan ini!</p>
+        <p class="text-sm opacity-90 mt-1 leading-snug">Pertahankan iuran tepat waktu, semangat gotong royong!</p>
+        <button onclick="switchView('laporan')" class="mt-4 bg-white text-[#7209B7] px-4 py-2 rounded-full font-black text-sm w-full">Lihat Laporan →</button>
+      </div>
+
+      <div class="mt-6 flex items-center gap-3 px-2">
+        <div class="flex -space-x-2">
+          <img src="https://i.pravatar.cc/100?img=33" class="w-8 h-8 rounded-full border-2 border-white">
+          <img src="https://i.pravatar.cc/100?img=12" class="w-8 h-8 rounded-full border-2 border-white">
+          <img src="https://i.pravatar.cc/100?img=20" class="w-8 h-8 rounded-full border-2 border-white">
+        </div>
+        <p class="text-xs font-bold leading-tight"> <b>18 warga</b> sudah lunas<br><span class="text-[#06D6A0]">+4 lunas hari ini 🎉</span></p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 min-w-0">
+    <!-- DASHBOARD VIEW -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- Hero Saldo -->
+      <div class="grid lg:grid-cols-[1.6fr_1fr] gap-6">
+        <div class="bg-gradient-to-br from-[#FF6B6B] via-[#FF8E53] to-[#FFC857] rounded-[36px] p-6 sm:p-8 text-white relative overflow-hidden shadow-[0_24px_40px_rgba(255,107,107,0.25)]">
+          <div class="absolute inset-0 pattern-dots opacity-20"></div>
+          <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
+          <div class="absolute -right-6 bottom-10 w-24 h-24 bg-[#FFD23F] rounded-full opacity-30"></div>
+          <div class="relative">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p class="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-3 py-1.5 rounded-full text-xs font-black tracking-widest">💰 SALDO KAS BERSAMA</p>
+                <h2 class="font-poppins font-extrabold text-[36px] sm:text-[48px] leading-none mt-3 tracking-tight" id="saldoDisplay">Rp 14.850.000</h2>
+                <p class="font-bold opacity-90 mt-1 flex items-center gap-2 text-sm"><span class="bg-white text-[#FF6B6B] px-2 py-0.5 rounded-full text-xs font-black">↑ 8.2%</span> dari bulan lalu • Update 8 Agu 2026</p>
+              </div>
+              <div class="bg-white rounded-2xl p-3 shadow-xl rotate-3 hidden sm:block">
+                <p class="text-[10px] font-black text-gray-400 tracking-widest">KAS TKR RT.02</p>
+                <p class="font-black text-[#2B2D42] text-sm">**** 4521</p>
+                <div class="flex gap-1 mt-2"><span class="w-6 h-1.5 bg-[#FF6B6B] rounded-full"></span><span class="w-6 h-1.5 bg-[#FFD23F] rounded-full"></span><span class="w-6 h-1.5 bg-[#06D6A0] rounded-full"></span></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-8">
+              <div class="bg-white rounded-[20px] p-4 text-[#2B2D42]">
+                <p class="text-[11px] font-black tracking-widest text-[#06D6A0] flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> MASUK</p>
+                <p class="font-black text-[16px] sm:text-[18px] mt-1" id="statMasuk">Rp 3.200.000</p>
+                <p class="text-[11px] font-bold text-gray-400">Bulan ini</p>
+              </div>
+              <div class="bg-white rounded-[20px] p-4 text-[#2B2D42]">
+                <p class="text-[11px] font-black tracking-widest text-[#EF476F] flex items-center gap-1"><i class="fa-solid fa-arrow-trend-down"></i> KELUAR</p>
+                <p class="font-black text-[16px] sm:text-[18px] mt-1" id="statKeluar">Rp 1.450.000</p>
+                <p class="text-[11px] font-bold text-gray-400">Bulan ini</p>
+              </div>
+              <div class="bg-[#2B2D42] rounded-[20px] p-4 text-white">
+                <p class="text-[11px] font-black tracking-widest text-[#FFD23F]">BERSIH</p>
+                <p class="font-black text-[16px] sm:text-[18px] mt-1" id="statBersih">+Rp 1.750.000</p>
+                <p class="text-[11px] font-bold text-white/60">Profit RT 🎉</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-6">
+              <button onclick="openModal('modalTransaksi')" class="bg-white text-[#2B2D42] px-6 py-3 rounded-full font-black shadow-lg hover:scale-105 transition flex items-center gap-2"><i class="fa-solid fa-plus bg-[#FF6B6B] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"></i> Catat Transaksi</button>
+              <button onclick="switchView('laporan')" class="bg-[#2B2D42] text-white px-6 py-3 rounded-full font-black flex items-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> Unduh Laporan</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Mini Stats -->
+        <div class="space-y-4">
+          <div class="bg-white rounded-[28px] p-5 border-2 border-[#FFF0D6] shadow-sm">
+            <div class="flex items-center justify-between">
+              <h3 class="font-black flex items-center gap-2"><span class="w-8 h-8 rounded-xl bg-[#FFF0D6] flex items-center justify-center text-[#FF8E53]"><i class="fa-solid fa-hand-holding-dollar"></i></span> Iuran Agustus</h3>
+              <span class="bg-[#06D6A0] text-white text-xs font-black px-3 py-1 rounded-full">75% LUNAS</span>
+            </div>
+            <div class="mt-4">
+              <div class="flex justify-between text-sm font-black"><span class="text-gray-400">Progress</span><span>18 / 24 warga</span></div>
+              <div class="h-3 bg-[#FFF0D6] rounded-full mt-2 overflow-hidden p-1">
+                <div id="progressIuran" class="h-full bg-gradient-to-r from-[#06D6A0] to-[#06BEBB] rounded-full" style="width:75%"></div>
+              </div>
+              <div class="flex gap-2 mt-4">
+                <div class="flex-1 bg-[#FFF8E6] rounded-2xl p-3 text-center border border-[#FFD93D]/30">
+                  <p class="text-2xl font-black text-[#FF8E53]" id="tunggakanCount">6</p>
+                  <p class="text-[11px] font-black tracking-widest text-gray-500">MENUNGGAK</p>
+                </div>
+                <div class="flex-1 bg-[#E0FFF6] rounded-2xl p-3 text-center border border-[#06D6A0]/20">
+                  <p class="text-2xl font-black text-[#06D6A0]" id="lunasCount">18</p>
+                  <p class="text-[11px] font-black tracking-widest text-gray-500">LUNAS</p>
+                </div>
+              </div>
+              <button onclick="switchView('warga')" class="w-full mt-4 bg-[#FFF0D6] text-[#2B2D42] py-2.5 rounded-full font-black text-sm hover:bg-[#FFE4b5] transition">Lihat Daftar Warga →</button>
+            </div>
+          </div>
+
+          <div class="bg-[#2B2D42] rounded-[28px] p-5 text-white relative overflow-hidden">
+            <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-[#7209B7] rounded-full blur-2xl opacity-30"></div>
+            <p class="text-xs font-black tracking-widest text-[#FFD23F]">📢 PENGUMUMAN WARGA</p>
+            <p class="font-bold mt-2 leading-snug">Kerja bakti & agustusan Minggu, 17 Agu jam 07.00 di Balai RT. Dana konsumsi Rp 750rb sudah disiapkan.</p>
+            <div class="flex items-center gap-2 mt-3 text-xs font-bold text-white/70"><i class="fa-solid fa-calendar"></i> 3 hari lagi • Wajib hadir!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart & Transaksi Terbaru -->
+      <div class="grid lg:grid-cols-[1.4fr_0.9fr] gap-6">
+        <div class="bg-white rounded-[32px] p-6 shadow-sm border border-orange-50">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="font-fredoka font-bold text-xl flex items-center gap-2">📊 Arus Kas 6 Bulan</h3>
+            <div class="flex items-center gap-3 text-xs font-black">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#06D6A0]"></span> Masuk</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#EF476F]"></span> Keluar</span>
+              <select id="chartRange" class="bg-[#FFF0D6] rounded-full px-3 py-1.5 font-black outline-none"><option>6 Bulan</option><option>12 Bulan</option></select>
+            </div>
+          </div>
+          <div class="mt-6 h-[220px] flex items-end gap-2 sm:gap-3 justify-between" id="barChart">
+            <!-- Bars injected by JS -->
+          </div>
+          <div class="flex justify-between mt-3 text-[11px] font-black text-gray-400 px-1" id="chartLabels"></div>
+        </div>
+
+        <div class="bg-white rounded-[32px] p-6 shadow-sm border border-orange-50">
+          <div class="flex items-center justify-between">
+            <h3 class="font-fredoka font-bold text-xl">🔥 Transaksi Terbaru</h3>
+            <button onclick="switchView('transaksi')" class="text-sm font-black text-[#FF6B6B]">Lihat semua →</button>
+          </div>
+          <div class="mt-5 space-y-3" id="recentTransactions">
+            <!-- Injected -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Warga Menunggak Quick -->
+      <div class="bg-white rounded-[32px] p-6 shadow-sm border border-orange-50">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="font-fredoka font-bold text-xl flex items-center gap-2">⚠️ Perlu Ditagih <span class="bg-[#EF476F] text-white text-xs px-2.5 py-1 rounded-full font-black" id="badgeMenunggak">6 WARGA</span></h3>
+          <button onclick="broadcastWA()" class="bg-[#25D366] text-white px-4 py-2 rounded-full font-black text-sm flex items-center gap-2 shadow-md hover:scale-105 transition"><i class="fa-brands fa-whatsapp text-lg"></i> Broadcast WA</button>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5" id="menunggakGrid">
+          <!-- Injected -->
+        </div>
+      </div>
+    </section>
+
+    <!-- WARGA VIEW -->
+    <section id="view-warga" class="hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="font-fredoka font-bold text-[28px] leading-none">Data Warga TKR RT.02</h2>
+          <p class="text-sm font-bold text-gray-400 mt-1">Kelola 24 kepala keluarga • Iuran Rp 50.000 / bulan</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openModal('modalWarga')" class="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] text-white px-6 py-3 rounded-full font-black shadow-lg flex items-center gap-2 hover:scale-105 transition"><i class="fa-solid fa-user-plus"></i> Tambah Warga</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-[28px] p-4 shadow-sm border border-orange-50 flex flex-col lg:flex-row gap-3">
+        <div class="flex-1 flex items-center gap-3 bg-[#FFF8F0] border-2 border-[#FFF0D6] rounded-full px-4 py-2.5">
+          <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+          <input id="searchWarga" placeholder="Cari nama / no rumah..." class="flex-1 bg-transparent outline-none font-bold text-sm">
+        </div>
+        <div class="flex gap-2">
+          <select id="filterStatus" class="bg-white border-2 border-[#FFF0D6] rounded-full px-4 py-2.5 font-black text-sm outline-none">
+            <option value="semua">Semua Status</option>
+            <option value="lunas">✅ Lunas</option>
+            <option value="menunggak">⚠️ Menunggak</option>
+          </select>
+          <select id="filterRumah" class="bg-white border-2 border-[#FFF0D6] rounded-full px-4 py-2.5 font-black text-sm outline-none">
+            <option value="semua">Semua Blok</option>
+            <option value="A">Blok A</option>
+            <option value="B">Blok B</option>
+            <option value="C">Blok C</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-[32px] shadow-sm border border-orange-50 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-[#FFF8F0] text-[11px] font-black tracking-widest text-gray-500">
+              <tr>
+                <th class="text-left px-6 py-4">WARGA</th>
+                <th class="text-left px-4 py-4">RUMAH</th>
+                <th class="text-left px-4 py-4">KONTAK</th>
+                <th class="text-left px-4 py-4">IURAN</th>
+                <th class="text-left px-4 py-4">STATUS</th>
+                <th class="text-right px-6 py-4">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="wargaTable" class="divide-y divide-orange-50">
+              <!-- Injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSAKSI VIEW -->
+    <section id="view-transaksi" class="hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <h2 class="font-fredoka font-bold text-[28px]">Buku Kas Digital</h2>
+        <div class="flex gap-2">
+          <button onclick="exportCSV()" class="bg-white border-2 border-[#FFF0D6] px-5 py-2.5 rounded-full font-black text-sm flex items-center gap-2"><i class="fa-solid fa-download"></i> Export CSV</button>
+          <button onclick="openModal('modalTransaksi')" class="bg-[#2B2D42] text-white px-6 py-2.5 rounded-full font-black text-sm flex items-center gap-2"><i class="fa-solid fa-plus"></i> Transaksi Baru</button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-white rounded-[28px] p-4 shadow-sm border border-orange-50 flex flex-wrap gap-3 items-center">
+          <div class="flex items-center gap-2 bg-[#FFF8F0] border-2 border-[#FFF0D6] rounded-full px-4 py-2 flex-1 min-w-[200px]">
+            <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+            <input id="searchTransaksi" placeholder="Cari deskripsi / kategori..." class="flex-1 bg-transparent outline-none font-bold text-sm">
+          </div>
+          <select id="filterTipe" class="border-2 border-[#FFF0D6] rounded-full px-4 py-2 font-black text-sm bg-white outline-none">
+            <option value="semua">Semua</option>
+            <option value="masuk">Pemasukan</option>
+            <option value="keluar">Pengeluaran</option>
+          </select>
+          <select id="filterKategori" class="border-2 border-[#FFF0D6] rounded-full px-4 py-2 font-black text-sm bg-white outline-none">
+            <option value="semua">Semua Kategori</option>
+            <option>Iuran Warga</option><option>Sumbangan</option><option>Keamanan</option><option>Kebersihan</option><option>Perbaikan</option><option>Acara</option><option>Lainnya</option>
+          </select>
+        </div>
+        <div class="bg-gradient-to-br from-[#06D6A0] to-[#06BEBB] rounded-[28px] p-5 text-white flex items-center justify-between">
+          <div>
+            <p class="text-xs font-black tracking-widest opacity-80">TOTAL TRANSAKSI</p>
+            <p class="font-black text-2xl" id="totalTransaksiCount">42 transaksi</p>
+            <p class="text-sm font-bold opacity-90">Agustus 2026</p>
+          </div>
+          <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-book"></i></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-[32px] shadow-sm border border-orange-50 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-[#FFF8F0] text-[11px] font-black tracking-widest text-gray-500">
+              <tr>
+                <th class="text-left px-6 py-4">TANGGAL</th>
+                <th class="text-left px-4 py-4">KATEGORI</th>
+                <th class="text-left px-4 py-4">KETERANGAN</th>
+                <th class="text-right px-4 py-4">JUMLAH</th>
+                <th class="text-right px-6 py-4">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="transaksiTable" class="divide-y divide-orange-50">
+              <!-- Injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- IURAN VIEW -->
+    <section id="view-iuran" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-[#7209B7] via-[#4361EE] to-[#3A86FF] rounded-[32px] p-6 sm:p-8 text-white relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/15 rounded-full blur-2xl"></div>
+        <div class="flex flex-wrap items-center justify-between gap-6 relative">
+          <div>
+            <p class="bg-white/20 inline-flex px-3 py-1 rounded-full text-xs font-black tracking-widest">BULAN BERJALAN</p>
+            <h2 class="font-fredoka font-bold text-3xl mt-3">Iuran Agustus 2026</h2>
+            <p class="font-bold opacity-90 mt-1">Tagihan Rp 50.000 / KK • Jatuh tempo 20 Agustus</p>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <button onclick="generateIuran()" class="bg-white text-[#4361EE] px-5 py-2.5 rounded-full font-black text-sm flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Tagihan</button>
+              <button onclick="tandaiSemuaLunas()" class="bg-[#2B2D42] text-white px-5 py-2.5 rounded-full font-black text-sm">Tandai Semua Lunas</button>
+            </div>
+          </div>
+          <div class="bg-white rounded-[24px] p-5 text-[#2B2D42] min-w-[220px] shadow-xl">
+            <p class="text-xs font-black tracking-widest text-gray-400">TOTAL TERKUMPUL</p>
+            <p class="font-black text-2xl mt-1" id="iuranTerkumpul">Rp 900.000</p>
+            <div class="h-2 bg-gray-100 rounded-full mt-3 overflow-hidden"><div class="h-full bg-[#06D6A0] rounded-full" style="width:75%"></div></div>
+            <p class="text-xs font-bold text-gray-500 mt-2"><span id="iuranPersen">75%</span> dari target Rp 1.200.000</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-[32px] p-6 shadow-sm border border-orange-50">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="font-black text-lg">Daftar Tagihan Warga</h3>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 bg-[#06D6A0] rounded-full"></span><span class="text-xs font-black">LUNAS</span>
+            <span class="w-3 h-3 bg-[#EF476F] rounded-full ml-2"></span><span class="text-xs font-black">BELUM</span>
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="iuranGrid">
+          <!-- Injected -->
+        </div>
+      </div>
+    </section>
+
+    <!-- LAPORAN VIEW -->
+    <section id="view-laporan" class="hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <h2 class="font-fredoka font-bold text-[28px]">Laporan Keuangan</h2>
+        <button onclick="window.print()" class="bg-[#2B2D42] text-white px-6 py-3 rounded-full font-black flex items-center gap-2"><i class="fa-solid fa-print"></i> Cetak Laporan</button>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-[28px] p-6 border-2 border-[#E0FFF6] text-center">
+          <p class="text-xs font-black tracking-widest text-[#06D6A0]">TOTAL PEMASUKAN</p>
+          <p class="font-black text-3xl mt-2" id="lapMasuk">Rp 18.5jt</p>
+          <p class="text-xs font-bold text-gray-400 mt-1">Jan - Agu 2026</p>
+        </div>
+        <div class="bg-white rounded-[28px] p-6 border-2 border-[#FFE0E0] text-center">
+          <p class="text-xs font-black tracking-widest text-[#EF476F]">TOTAL PENGELUARAN</p>
+          <p class="font-black text-3xl mt-2" id="lapKeluar">Rp 3.65jt</p>
+          <p class="text-xs font-bold text-gray-400 mt-1">Jan - Agu 2026</p>
+        </div>
+        <div class="bg-gradient-to-br from-[#FF8E53] to-[#FF6B6B] rounded-[28px] p-6 text-white text-center shadow-lg">
+          <p class="text-xs font-black tracking-widest opacity-80">SALDO AKHIR</p>
+          <p class="font-black text-3xl mt-2" id="lapSaldo">Rp 14.85jt</p>
+          <p class="text-xs font-bold opacity-80 mt-1">Kas tersedia</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-[32px] p-6 shadow-sm border border-orange-50">
+        <h3 class="font-black text-lg mb-4">Rincian Pengeluaran Terbesar</h3>
+        <div class="space-y-4" id="laporanRincian">
+          <!-- injected -->
+        </div>
+      </div>
+
+      <div class="bg-[#2B2D42] rounded-[32px] p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 class="font-fredoka font-bold text-xl">Siap untuk musyawarah warga?</h3>
+          <p class="text-sm opacity-70 font-bold">Unduh laporan PDF siap presentasi untuk pertemuan RT.</p>
+        </div>
+        <button onclick="showToast('Laporan PDF berhasil diunduh! 📄✨')" class="bg-white text-[#2B2D42] px-6 py-3 rounded-full font-black whitespace-nowrap">Download PDF</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="lg:hidden fixed bottom-4 left-4 right-4 bg-[#2B2D42] rounded-[28px] p-2 flex justify-around items-center shadow-[0_20px_40px_rgba(0,0,0,0.2)] z-30">
+  <button data-view="dashboard" class="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl bg-white text-[#2B2D42] font-black text-[11px]"><i class="fa-solid fa-table-columns text-sm"></i>Home</button>
+  <button data-view="warga" class="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl text-white/70 font-black text-[11px]"><i class="fa-solid fa-users text-sm"></i>Warga</button>
+  <button onclick="openModal('modalTransaksi')" class="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FFD23F] flex items-center justify-center text-white text-xl shadow-lg -mt-6 border-4 border-[#FFFBF0]"><i class="fa-solid fa-plus"></i></button>
+  <button data-view="transaksi" class="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl text-white/70 font-black text-[11px]"><i class="fa-solid fa-book text-sm"></i>Kas</button>
+  <button data-view="iuran" class="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl text-white/70 font-black text-[11px]"><i class="fa-solid fa-receipt text-sm"></i>Iuran</button>
+</nav>
+
+<!-- Modal Transaksi -->
+<div id="modalTransaksi" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-[#2B2D42]/60 backdrop-blur-sm" onclick="closeModal('modalTransaksi')"></div>
+  <div class="absolute inset-x-4 bottom-4 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 bg-white rounded-[32px] max-w-[520px] w-auto lg:w-[520px] max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+    <div class="bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] p-6 text-white relative">
+      <button onclick="closeModal('modalTransaksi')" class="absolute right-4 top-4 w-9 h-9 bg-white/20 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="font-fredoka font-bold text-2xl">Catat Transaksi Baru</h3>
+      <p class="text-sm font-bold opacity-90">Pemasukan atau pengeluaran kas RT</p>
+    </div>
+    <form id="formTransaksi" class="p-6 space-y-4 overflow-y-auto">
+      <div class="grid grid-cols-2 gap-3 p-1 bg-[#FFF0D6] rounded-full">
+        <label class="cursor-pointer"><input type="radio" name="tipe" value="masuk" checked class="peer hidden"><span class="block text-center py-2.5 rounded-full font-black text-sm peer-checked:bg-[#06D6A0] peer-checked:text-white transition">💰 Pemasukan</span></label>
+        <label class="cursor-pointer"><input type="radio" name="tipe" value="keluar" class="peer hidden"><span class="block text-center py-2.5 rounded-full font-black text-sm peer-checked:bg-[#EF476F] peer-checked:text-white transition">💸 Pengeluaran</span></label>
+      </div>
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">KATEGORI</label>
+        <select name="kategori" class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#FF8E53] bg-[#FFFBF0]">
+          <option>Iuran Warga</option><option>Sumbangan</option><option>Keamanan</option><option>Kebersihan</option><option>Perbaikan</option><option>Acara</option><option>Lainnya</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">JUMLAH (Rp)</label>
+        <input name="jumlah" type="number" placeholder="50000" required class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-black text-lg outline-none focus:border-[#FF8E53] bg-[#FFFBF0]">
+      </div>
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">KETERANGAN</label>
+        <input name="deskripsi" placeholder="Contoh: Iuran Bu Ani - Blok B12" required class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#FF8E53] bg-[#FFFBF0]">
+      </div>
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">TANGGAL</label>
+        <input name="tanggal" type="date" class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#FF8E53] bg-[#FFFBF0]">
+      </div>
+      <button type="submit" class="w-full bg-[#2B2D42] text-white py-4 rounded-full font-black text-base shadow-lg hover:scale-[1.02] transition">Simpan Transaksi ✨</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Warga -->
+<div id="modalWarga" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-[#2B2D42]/60 backdrop-blur-sm" onclick="closeModal('modalWarga')"></div>
+  <div class="absolute inset-x-4 bottom-4 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 bg-white rounded-[32px] max-w-[480px] w-auto lg:w-[480px] overflow-hidden shadow-2xl">
+    <div class="bg-gradient-to-r from-[#06D6A0] to-[#06BEBB] p-6 text-white relative">
+      <button onclick="closeModal('modalWarga')" class="absolute right-4 top-4 w-9 h-9 bg-white/20 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="font-fredoka font-bold text-2xl">Tambah Warga Baru</h3>
+      <p class="text-sm font-bold opacity-90">Data kepala keluarga TKR RT.02</p>
+    </div>
+    <form id="formWarga" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">NAMA LENGKAP</label>
+        <input name="nama" placeholder="Siti Rahayu" required class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#06D6A0] bg-[#FFFBF0]">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-black tracking-widest text-gray-500">NO RUMAH</label>
+          <input name="rumah" placeholder="B-07" required class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#06D6A0] bg-[#FFFBF0]">
+        </div>
+        <div>
+          <label class="text-xs font-black tracking-widest text-gray-500">BLOK</label>
+          <select name="blok" class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none bg-[#FFFBF0]"><option value="A">Blok A</option><option value="B">Blok B</option><option value="C">Blok C</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-black tracking-widest text-gray-500">NO WHATSAPP</label>
+        <input name="hp" placeholder="0812xxxxxxx" required class="w-full mt-1 border-2 border-[#FFF0D6] rounded-2xl px-4 py-3 font-bold outline-none focus:border-[#06D6A0] bg-[#FFFBF0]">
+      </div>
+      <button type="submit" class="w-full bg-[#2B2D42] text-white py-4 rounded-full font-black shadow-lg">Simpan Warga 🎉</button>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 bg-[#2B2D42] text-white px-6 py-3 rounded-full font-black shadow-2xl hidden items-center gap-3 z-50">
+  <span class="w-8 h-8 bg-[#06D6A0] rounded-full flex items-center justify-center"><i class="fa-solid fa-check"></i></span>
+  <span id="toastMsg">Berhasil!</span>
+</div>
+
+<script>
+// Data
+let warga = [];
+let transaksi = [];
+let tagihanFB = [];
+let jenisKasList = ["Kas Bulanan","Kas Keamanan","Kas Sosial / Kematian","KAS HUT RI"];
+
+const firebaseConfig = { apiKey:"AIzaSyBbby_z2WVw02-1I9R-CPsQBCKzunLdROc", authDomain:"kas-rt02-tkr.firebaseapp.com", projectId:"kas-rt02-tkr", storageBucket:"kas-rt02-tkr.firebasestorage.app", messagingSenderId:"425411747451", appId:"1:425411747451:web:e5e7a8dcfd7256af28ccde" };
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function loadFirebase(){
+  try{
+    const snapW = await db.collection("warga").get();
+    const listW=[]; snapW.forEach(d=>{ const w=d.data(); listW.push({
+      id: w.id, nama: w.nama, rumah: w.blok, blok: (w.blok||'').replace(/[^A-Za-z]/g,'').charAt(0)||'C', hp: w.hp||'081234567800',
+      status: 'menunggak', warna: ["from-orange-400 to-pink-500","from-emerald-400 to-teal-500","from-violet-400 to-purple-500","from-blue-400 to-cyan-500","from-amber-400 to-orange-500"][Math.floor(Math.random()*5)],
+      nominal: w.nominal, orig: w
+    }); });
+    const snapT = await db.collection("tagihan").get();
+    tagihanFB=[]; snapT.forEach(d=> tagihanFB.push(d.data()));
+    const belumSet = new Set(tagihanFB.filter(x=>x.periode==="Agustus 2026" && x.status==="BELUM").map(x=>String(x.wargaId)));
+    listW.forEach(w=>{ if(belumSet.has(String(w.id))) w.status='menunggak'; else if(tagihanFB.some(x=>String(x.wargaId)===String(w.id))) w.status='lunas'; else w.status='menunggak'; });
+    if(listW.length) warga = listW;
+    const snapTr = await db.collection("transaksi").get();
+    const listTr=[]; snapTr.forEach(d=>{ const x=d.data(); listTr.push({id:x.id, tanggal:x.tanggal, kategori:x.kategori||x.jenisKas||"Lainnya", deskripsi:x.keterangan, tipe:(x.tipe==="MASUK"?"masuk":"keluar"), jumlah:Number(x.nominal)||0}); });
+    if(listTr.length) transaksi = listTr.sort((a,b)=> b.tanggal.localeCompare(a.tanggal));
+    const docKas = await db.collection("config").doc("jenisKas").get();
+    if(docKas.exists) jenisKasList = docKas.data().list;
+    console.log("Firebase OK", warga.length, transaksi.length);
+    loadFirebase();
+  }catch(e){ console.error(e); loadFirebase(); }
+}
+
+const bulanNames = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu"];
+
+// Helpers
+function formatRp(n){ return "Rp " + n.toLocaleString('id-ID'); }
+function formatRpSingkat(n){
+  if(n>=1000000) return "Rp "+(n/1000000).toFixed(1)+"jt";
+  if(n>=1000) return "Rp "+(n/1000).toFixed(0)+"rb";
+  return formatRp(n);
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.remove('hidden'); t.classList.add('flex');
+  setTimeout(()=>{t.classList.add('hidden'); t.classList.remove('flex');},3000);
+}
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+
+// View Switching
+function switchView(view){
+  document.querySelectorAll('section[id^="view-"]').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('view-'+view).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const v=b.dataset.view;
+    if(v===view){ b.className="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm bg-[#2B2D42] text-white shadow-lg"; }
+    else { b.className="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-black text-sm text-[#2B2D42] hover:bg-orange-50 transition"; }
+  });
+  document.querySelectorAll('.mob-nav').forEach(b=>{
+    const v=b.dataset.view;
+    if(v===view) b.className="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl bg-white text-[#2B2D42] font-black text-[11px]";
+    else b.className="mob-nav flex flex-col items-center gap-1 px-3 py-2 rounded-2xl text-white/70 font-black text-[11px]";
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('[data-view]').forEach(btn=> btn.addEventListener('click', ()=> switchView(btn.dataset.view)));
+
+// Render Functions
+function calcStats(){
+  const masuk = transaksi.filter(t=>t.tipe==='masuk' && t.tanggal.startsWith('2026-08')).reduce((a,b)=>a+b.jumlah,0);
+  const keluar = transaksi.filter(t=>t.tipe==='keluar' && t.tanggal.startsWith('2026-08')).reduce((a,b)=>a+b.jumlah,0);
+  const totalMasukAll = transaksi.filter(t=>t.tipe==='masuk').reduce((a,b)=>a+b.jumlah,0);
+  const totalKeluarAll = transaksi.filter(t=>t.tipe==='keluar').reduce((a,b)=>a+b.jumlah,0);
+  const saldo = 13300000 + totalMasukAll - totalKeluarAll; // base + transaksi
+  return {masuk, keluar, saldo, totalMasukAll, totalKeluarAll};
+}
+
+function renderDashboard(){
+  const {masuk, keluar, saldo} = calcStats();
+  document.getElementById('saldoDisplay').textContent = formatRp(saldo);
+  document.getElementById('statMasuk').textContent = formatRp(masuk || 3200000);
+  document.getElementById('statKeluar').textContent = formatRp(keluar || 1450000);
+  document.getElementById('statBersih').textContent = "+"+formatRp((masuk||3200000)-(keluar||1450000));
+
+  const lunas = warga.filter(w=>w.status==='lunas').length;
+  const nunggak = warga.length - lunas;
+  document.getElementById('lunasCount').textContent = lunas;
+  document.getElementById('tunggakanCount').textContent = nunggak;
+  document.getElementById('navWargaCount').textContent = warga.length;
+  document.getElementById('badgeMenunggak').textContent = nunggak + " WARGA";
+  document.getElementById('progressIuran').style.width = (lunas/warga.length*100)+"%";
+  document.getElementById('iuranTerkumpul').textContent = formatRp(lunas*50000);
+  document.getElementById('iuranPersen').textContent = Math.round(lunas/warga.length*100)+"%";
+
+  // chart
+  const chartData = [
+    {bln:"Mar", masuk: 18, keluar:12},
+    {bln:"Apr", masuk: 22, keluar:9},
+    {bln:"Mei", masuk: 19, keluar:15},
+    {bln:"Jun", masuk: 26, keluar:11},
+    {bln:"Jul", masuk: 20, keluar:14},
+    {bln:"Agu", masuk: Math.round((masuk||3200000)/100000), keluar: Math.round((keluar||1450000)/100000)},
+  ];
+  const chartEl = document.getElementById('barChart');
+  chartEl.innerHTML = chartData.map(d=>`
+    <div class="flex-1 flex flex-col items-center gap-2">
+      <div class="w-full flex gap-1 items-end justify-center h-[160px]">
+        <div class="flex-1 bg-gradient-to-t from-[#06D6A0] to-[#06BEBB] rounded-t-xl relative group" style="height:${d.masuk*6}px; min-height:20px">
+          <span class="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#2B2D42] text-white text-[10px] font-black px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition whitespace-nowrap">${formatRpSingkat(d.masuk*100000)}</span>
+        </div>
+        <div class="flex-1 bg-gradient-to-t from-[#EF476F] to-[#FF8E53] rounded-t-xl" style="height:${d.keluar*6}px; min-height:12px"></div>
+      </div>
+      <span class="text-xs font-black ${d.bln==='Agu' ? 'bg-[#2B2D42] text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${d.bln}</span>
+    </div>
+  `).join('');
+
+  // recent transactions
+  const recent = [...transaksi].sort((a,b)=> b.tanggal.localeCompare(a.tanggal)).slice(0,5);
+  document.getElementById('recentTransactions').innerHTML = recent.map(t=>`
+    <div class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FFFBF0] border border-transparent hover:border-orange-100 transition">
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 ${t.tipe==='masuk' ? 'bg-gradient-to-br from-[#06D6A0] to-[#06BEBB]' : 'bg-gradient-to-br from-[#EF476F] to-[#FF8E53]'}">
+        <i class="fa-solid ${t.tipe==='masuk' ? 'fa-arrow-down' : 'fa-arrow-up'} text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-black text-sm leading-tight truncate">${t.kategori}</p>
+        <p class="text-xs font-bold text-gray-400 truncate">${t.deskripsi} • ${t.tanggal}</p>
+      </div>
+      <p class="font-black ${t.tipe==='masuk' ? 'text-[#06D6A0]' : 'text-[#EF476F]'} whitespace-nowrap">${t.tipe==='masuk' ? '+' : '-'}${formatRpSingkat(t.jumlah)}</p>
+    </div>
+  `).join('');
+
+  // menunggak grid
+  const menunggak = warga.filter(w=>w.status==='menunggak').slice(0,6);
+  document.getElementById('menunggakGrid').innerHTML = menunggak.map(w=>`
+    <div class="bg-[#FFF8F0] border-2 border-[#FFF0D6] rounded-[24px] p-4 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${w.warna} flex items-center justify-center text-white font-black text-lg shrink-0">${w.nama.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-black text-sm truncate">${w.nama}</p>
+        <p class="text-xs font-bold text-gray-500">${w.rumah} • ${formatRp(50000)}</p>
+      </div>
+      <a href="https://wa.me/${w.hp.replace(/^0/,'62')}?text=Halo%20${encodeURIComponent(w.nama)}%2C%20tagihan%20iuran%20RT%2005%20bulan%20Agustus%20sebesar%20Rp%2050.000%20belum%20terbayar.%20Mohon%20segera%20dibayarkan%20ya%20🙏" target="_blank" class="w-10 h-10 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-md hover:scale-110 transition shrink-0"><i class="fa-brands fa-whatsapp"></i></a>
+    </div>
+  `).join('') || `<p class="col-span-3 text-center py-6 font-bold text-[#06D6A0]">🎉 Semua warga sudah lunas!</p>`;
+
+  renderWargaTable();
+  renderTransaksiTable();
+  renderIuranGrid();
+  renderLaporan();
+}
+
+function renderWargaTable(){
+  const q = (document.getElementById('searchWarga')?.value || '').toLowerCase();
+  const fStatus = document.getElementById('filterStatus')?.value || 'semua';
+  const fRumah = document.getElementById('filterRumah')?.value || 'semua';
+  let filtered = warga.filter(w=>{
+    const matchQ = w.nama.toLowerCase().includes(q) || w.rumah.toLowerCase().includes(q);
+    const matchS = fStatus==='semua' || w.status===fStatus;
+    const matchR = fRumah==='semua' || w.blok===fRumah;
+    return matchQ && matchS && matchR;
+  });
+  document.getElementById('wargaTable').innerHTML = filtered.map(w=>`
+    <tr class="hover:bg-[#FFFBF0] transition">
+      <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${w.warna} flex items-center justify-center text-white font-black text-sm">${w.nama.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+          <div>
+            <p class="font-black">${w.nama}</p>
+            <p class="text-xs font-bold text-gray-400">KK • ${w.blok} • Terdaftar 2023</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-4"><span class="bg-[#FFF0D6] px-3 py-1 rounded-full font-black text-xs border border-orange-200">${w.rumah}</span></td>
+      <td class="px-4 py-4 font-bold text-sm">${w.hp}</td>
+      <td class="px-4 py-4 font-black">${formatRp(50000)}</td>
+      <td class="px-4 py-4">
+        ${w.status==='lunas'
+          ? `<span class="inline-flex items-center gap-1 bg-[#E0FFF6] text-[#06A37A] px-3 py-1 rounded-full font-black text-xs border border-[#06D6A0]/20"><i class="fa-solid fa-circle-check"></i> Lunas</span>`
+          : `<span class="inline-flex items-center gap-1 bg-[#FFE8E8] text-[#EF476F] px-3 py-1 rounded-full font-black text-xs border border-red-200"><i class="fa-solid fa-triangle-exclamation"></i> Menunggak</span>`
+        }
+      </td>
+      <td class="px-6 py-4">
+        <div class="flex justify-end gap-1.5">
+          ${w.status==='menunggak'
+            ? `<button onclick="bayarIuran(${w.id})" class="bg-[#06D6A0] text-white px-3 py-1.5 rounded-full font-black text-xs hover:scale-105 transition">Tandai Lunas</button>`
+            : `<button onclick="bayarIuran(${w.id})" class="bg-white border-2 border-gray-200 px-3 py-1.5 rounded-full font-black text-xs">Batal</button>`
+          }
+          <a href="https://wa.me/${w.hp.replace(/^0/,'62')}" target="_blank" class="w-8 h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+          <button onclick="hapusWarga(${w.id})" class="w-8 h-8 rounded-full bg-white border border-red-100 text-[#EF476F] flex items-center justify-center hover:bg-red-50"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" class="text-center py-10 font-bold text-gray-400">Tidak ada data warga 😢</td></tr>`;
+}
+
+function renderTransaksiTable(){
+  const q = (document.getElementById('searchTransaksi')?.value || '').toLowerCase();
+  const fTipe = document.getElementById('filterTipe')?.value || 'semua';
+  const fKat = document.getElementById('filterKategori')?.value || 'semua';
+  let filtered = transaksi.filter(t=>{
+    const matchQ = t.deskripsi.toLowerCase().includes(q) || t.kategori.toLowerCase().includes(q);
+    const matchT = fTipe==='semua' || t.tipe===fTipe;
+    const matchK = fKat==='semua' || t.kategori===fKat;
+    return matchQ && matchT && matchK;
+  }).sort((a,b)=> b.tanggal.localeCompare(a.tanggal));
+  document.getElementById('totalTransaksiCount').textContent = filtered.length + " transaksi";
+  document.getElementById('transaksiTable').innerHTML = filtered.map(t=>`
+    <tr class="hover:bg-[#FFFBF0] transition">
+      <td class="px-6 py-4"><span class="bg-[#FFF0D6] px-2.5 py-1 rounded-full font-black text-xs">${t.tanggal}</span></td>
+      <td class="px-4 py-4"><span class="inline-flex items-center gap-1.5 font-black text-xs px-3 py-1 rounded-full ${t.tipe==='masuk' ? 'bg-[#E0FFF6] text-[#06A37A]' : 'bg-[#FFE8E8] text-[#EF476F]'}"><i class="fa-solid ${t.tipe==='masuk' ? 'fa-arrow-down' : 'fa-arrow-up'} text-[10px]"></i> ${t.kategori}</span></td>
+      <td class="px-4 py-4 font-bold text-sm max-w-[280px] truncate">${t.deskripsi}</td>
+      <td class="px-4 py-4 text-right font-black ${t.tipe==='masuk' ? 'text-[#06D6A0]' : 'text-[#EF476F]'}">${t.tipe==='masuk' ? '+' : '-'}${formatRp(t.jumlah)}</td>
+      <td class="px-6 py-4 text-right">
+        <button onclick="hapusTransaksi(${t.id})" class="w-8 h-8 rounded-full bg-white border border-red-100 text-[#EF476F] hover:bg-red-50"><i class="fa-solid fa-trash text-xs"></i></button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="5" class="text-center py-10 font-bold text-gray-400">Belum ada transaksi</td></tr>`;
+}
+
+function renderIuranGrid(){
+  document.getElementById('iuranGrid').innerHTML = warga.map(w=>`
+    <div class="border-2 ${w.status==='lunas' ? 'border-[#06D6A0] bg-[#E0FFF6]/40' : 'border-[#FFF0D6] bg-[#FFFBF0]'} rounded-[24px] p-4 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${w.warna} flex items-center justify-center text-white font-black">${w.nama.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-black text-sm truncate">${w.nama}</p>
+        <p class="text-xs font-bold text-gray-500">${w.rumah} • Rp 50.000</p>
+        <span class="inline-flex mt-1 text-[11px] font-black px-2 py-0.5 rounded-full ${w.status==='lunas' ? 'bg-[#06D6A0] text-white' : 'bg-[#EF476F] text-white'}">${w.status==='lunas' ? 'LUNAS' : 'BELUM BAYAR'}</span>
+      </div>
+      <button onclick="bayarIuran(${w.id})" class="w-10 h-10 rounded-full ${w.status==='lunas' ? 'bg-white border-2 border-[#06D6A0] text-[#06D6A0]' : 'bg-[#2B2D42] text-white'} flex items-center justify-center shadow-md hover:scale-110 transition">
+        <i class="fa-solid ${w.status==='lunas' ? 'fa-check' : 'fa-plus'}"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function renderLaporan(){
+  const {totalMasukAll, totalKeluarAll, saldo} = calcStats();
+  document.getElementById('lapMasuk').textContent = formatRpSingkat(13300000 + totalMasukAll);
+  document.getElementById('lapKeluar').textContent = formatRpSingkat(totalKeluarAll);
+  document.getElementById('lapSaldo').textContent = formatRpSingkat(saldo);
+  const rincian = [
+    {nama:"Gaji Satpam & Keamanan", persen:42, jumlah:800000, warna:"bg-[#EF476F]"},
+    {nama:"Kebersihan & Sampah", persen:28, jumlah:350000, warna:"bg-[#FF8E53]"},
+    {nama:"Perbaikan Fasilitas", persen:18, jumlah:425000, warna:"bg-[#7209B7]"},
+    {nama:"Acara & Konsumsi", persen:12, jumlah:455000, warna:"bg-[#06D6A0]"},
+  ];
+  document.getElementById('laporanRincian').innerHTML = rincian.map(r=>`
+    <div class="flex items-center gap-4">
+      <div class="flex-1">
+        <div class="flex justify-between text-sm font-black"><span>${r.nama}</span><span>${formatRp(r.jumlah)}</span></div>
+        <div class="h-2.5 bg-gray-100 rounded-full mt-2 overflow-hidden"><div class="h-full ${r.warna} rounded-full" style="width:${r.persen}%"></div></div>
+      </div>
+      <span class="font-black text-sm bg-[#FFF0D6] px-3 py-1 rounded-full">${r.persen}%</span>
+    </div>
+  `).join('');
+}
+
+// Actions
+function bayarIuran(id){
+  const w = warga.find(x=>x.id===id);
+  if(!w) return;
+  if(w.status==='menunggak'){
+    w.status='lunas';
+    transaksi.unshift({id:Date.now(), tanggal:new Date().toISOString().slice(0,10), kategori:"Iuran Warga", deskripsi:`Iuran Agustus - ${w.rumah} ${w.nama}`, tipe:"masuk", jumlah:50000});
+    showToast(`✅ ${w.nama} ditandai LUNAS!`);
+  } else {
+    w.status='menunggak';
+    showToast(`⚠️ ${w.nama} ditandai menunggak`);
+  }
+  loadFirebase();
+}
+function hapusWarga(id){
+  if(confirm('Hapus warga ini?')){ warga = warga.filter(w=>w.id!==id); loadFirebase(); showToast('Warga dihapus 🗑️'); }
+}
+function hapusTransaksi(id){
+  if(confirm('Hapus transaksi ini?')){ transaksi = transaksi.filter(t=>t.id!==id); loadFirebase(); showToast('Transaksi dihapus'); }
+}
+function broadcastWA(){
+  const list = warga.filter(w=>w.status==='menunggak').map(w=>w.nama).join(', ');
+  if(!list) return showToast('Semua sudah lunas! 🎉');
+  window.open(`https://wa.me/?text=${encodeURIComponent('Halo warga TKR RT.02, mohon segera lunasi iuran Agustus Rp 50.000. Yang belum: '+list+' 🙏')}`,'_blank');
+}
+function generateIuran(){
+  const nunggak = warga.filter(w=>w.status==='menunggak').length;
+  showToast(`📋 Tagihan berhasil digenerate untuk ${warga.length} warga!`);
+  loadFirebase();
+}
+function tandaiSemuaLunas(){
+  let count=0;
+  warga.forEach(w=>{ if(w.status==='menunggak'){ w.status='lunas'; count++; transaksi.unshift({id:Date.now()+Math.random(), tanggal:new Date().toISOString().slice(0,10), kategori:"Iuran Warga", deskripsi:`Iuran Agustus - ${w.rumah} ${w.nama}`, tipe:"masuk", jumlah:50000}); }});
+  if(count===0) return showToast('Semua sudah lunas! ✨');
+  loadFirebase();
+  showToast(`🎉 ${count} warga ditandai lunas sekaligus!`);
+}
+function exportCSV(){
+  let csv = "Tanggal,Kategori,Keterangan,Tipe,Jumlah\n";
+  transaksi.forEach(t=> csv += `${t.tanggal},${t.kategori},"${t.deskripsi}",${t.tipe},${t.jumlah}\n`);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='laporan-kas-rt05.csv'; a.click();
+  showToast('📥 CSV berhasil diunduh!');
+}
+
+// Forms
+document.getElementById('formTransaksi').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const tipe = fd.get('tipe');
+  const kategori = fd.get('kategori');
+  const jumlah = parseInt(fd.get('jumlah'));
+  const deskripsi = fd.get('deskripsi');
+  const tanggal = fd.get('tanggal') || new Date().toISOString().slice(0,10);
+  if(!jumlah || jumlah<=0) return showToast('Jumlah tidak valid!');
+  const newTr={id:Date.now(), tanggal, kategori, deskripsi, tipe, jumlah}; transaksi.unshift(newTr); db.collection('transaksi').doc(String(newTr.id)).set({id:String(newTr.id), tagihanId:'', tipe: tipe==='masuk'?'MASUK':'KELUAR', kategori, jenisKas:kategori, nominal:jumlah, keterangan:deskripsi, tanggal, bukti:'-'}).catch(()=>{});
+  closeModal('modalTransaksi');
+  e.target.reset();
+  // keep default radio
+  e.target.querySelector('input[value="masuk"]').checked=true;
+  loadFirebase();
+  showToast(tipe==='masuk' ? '💰 Pemasukan tercatat!' : '💸 Pengeluaran tercatat!');
+});
+
+document.getElementById('formWarga').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const nama = fd.get('nama');
+  const rumah = fd.get('rumah').toUpperCase();
+  const blok = fd.get('blok');
+  const hp = fd.get('hp');
+  const warnaPool = ["from-orange-400 to-pink-500","from-emerald-400 to-teal-500","from-violet-400 to-purple-500","from-blue-400 to-cyan-500","from-amber-400 to-orange-500"];
+  const warna = warnaPool[Math.floor(Math.random()*warnaPool.length)];
+  const newW={id:Date.now(), nama, rumah, blok, hp, status:"menunggak", warna}; warga.unshift(newW); db.collection('warga').doc(String(newW.id)).set({id:String(newW.id), nama, blok:rumah, hp, status:'Tetap', nominal:50000, jenisKas:'Kas Bulanan'}).catch(()=>{});
+  closeModal('modalWarga');
+  e.target.reset();
+  loadFirebase();
+  showToast(`👋 Selamat datang, ${nama}!`);
+});
+
+// Filters
+document.getElementById('searchWarga')?.addEventListener('input', renderWargaTable);
+document.getElementById('filterStatus')?.addEventListener('change', renderWargaTable);
+document.getElementById('filterRumah')?.addEventListener('change', renderWargaTable);
+document.getElementById('searchTransaksi')?.addEventListener('input', renderTransaksiTable);
+document.getElementById('filterTipe')?.addEventListener('change', renderTransaksiTable);
+document.getElementById('filterKategori')?.addEventListener('change', renderTransaksiTable);
+document.getElementById('globalSearch')?.addEventListener('input', (e)=>{
+  const v=e.target.value.toLowerCase();
+  if(v.length>1){
+    switchView('warga');
+    document.getElementById('searchWarga').value=v;
+    renderWargaTable();
+  }
+});
+
+// Init
+document.querySelector('input[name="tanggal"]').valueAsDate = new Date();
+loadFirebase();
+</script>
+</body>
+</html>
